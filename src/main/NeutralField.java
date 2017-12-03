@@ -1,4 +1,5 @@
-public class NeutralField {
+public class NeutralField extends Field {
+
 
     // What the duce?
 
