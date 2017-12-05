@@ -19,6 +19,11 @@ public class BoardTest {
         this.player.setColor(Color.Red);
     }
 
+    @Test (expected = IllegalArgumentException.class)
+    public void checkIfGameDoesNotWorkIfInvalidPlayersNumberIsProvided() throws IllegalArgumentException {
+        Board board = new Board(10);
+    }
+
     @Test
     public void checkIfPawnMoves() throws Exception {
         board.movePawn(new BoardCoordinates(4, 5), new BoardCoordinates(5, 6), player);
@@ -41,6 +46,16 @@ public class BoardTest {
         assertEquals(Color.Red, board.getPawnColor(new BoardCoordinates(5, 8)));
     }
 
+    @Test (expected = WrongFieldStateException.class)
+    public void checkIfCannotPerformMoveOnFieldWithNoPawn() throws Exception {
+        board.movePawn(new BoardCoordinates(7, 5), new BoardCoordinates(5, 8), player);
+        assertEquals(Color.Red, board.getPawnColor(new BoardCoordinates(5, 8)));
+    }
+
+    @Test (expected = WrongMoveException.class)
+    public void checkIfDoesNotMoveOutOfMoveRange() throws Exception {
+        board.movePawn(new BoardCoordinates(4, 5), new BoardCoordinates(6, 7), player);
+    }
 
     @org.junit.After
     public void tearDown() throws Exception {
