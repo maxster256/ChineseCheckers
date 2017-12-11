@@ -3,6 +3,9 @@ import java.util.ArrayList;
 public class Main {
 
     public static void main(String[] args) {
+
+
+
         Board board = new Board(2);
         ArrayList<BoardCoordinates> map = board.getPawnsCoordinates();
         try {
@@ -13,8 +16,7 @@ public class Main {
             ex.printStackTrace();
         }
 
-        Player player = new Player();
-        player.setColor(Color.Red);
+        Player player = new Player(Color.Red, "Foo Bar");
 
         try {
             board.movePawn(new BoardCoordinates(4, 5), new BoardCoordinates(5, 6), player);

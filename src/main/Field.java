@@ -1,13 +1,10 @@
 public abstract class Field {
 
-    protected Pawn pawn = null;
-    protected Color color = null;
+    protected Pawn pawn;
+    protected Color color;
 
     public boolean isOccupied() {
-        if(pawn != null)
-            return true;
-        else
-            return false;
+        return pawn != null;
     }
 
     public Pawn getPawn() {
