@@ -8,12 +8,17 @@ public class Board implements BoardInterface {
 
     // TODO (for this week):
     // 1. Sprawdź, czy pionek nie jest w bazie przeciwnika, jeśli jest, nie pozwól mu z niej wyjść. - DONE.
-    // 2. Określ, kto wygrywa (obserwator?)
+    //      źle!!! nie sprawdzasz przeciwnego koloru, a po prostu czy jest inny od pionka!!!
+    // 2. Określ, kto wygrywa (obserwator?) - jako tako zrobione, bez obserwatora
     // 3. Stwórz bota.
 
     // TODO (notki od PN):
     // Chyba miałoby sens stworzyć klas BluePlayer, RedPlayer, GreenPlayer itd...
     // Jakoś wyglądałoby bardziej "elegancko", przynajmniej tak mi się zdaje.
+
+    // MK
+    // Chyba nie ma sensu, skoro jedyna różnica to kolor... trochę mało jak na osobną klasę
+    //TODO: Poprawić punkt 1 z TODO wyżej (for this week)!!!
 
     Board(int numberOfPlayers) throws IllegalArgumentException { //TODO: Own exception?
 
@@ -60,11 +65,8 @@ public class Board implements BoardInterface {
 
     // creates an array of fields, pattern is given up
 
-    /**
-     * Creates an array of fields,
-     *
-     * @return
-     */
+
+    // Creates an array of fields
     private ArrayList<ArrayList<Field>> assignFieldsToBoard() {
         ArrayList<ArrayList<Field>> newGameBoard = new ArrayList<>();
         ArrayList<Field> newRow;
@@ -226,7 +228,7 @@ public class Board implements BoardInterface {
         if (oldFieldColor != null) {
             // We are in a base
             // We are in an enemy base
-// We are at a home base
+            // We are at a home base
             return oldFieldColor != pawnColor;
         }
         else {
@@ -241,6 +243,8 @@ public class Board implements BoardInterface {
 
         // TODO: Implement
         // Sprawdź kolor pionka, powiązać kolor przeciwny, sprawdzić, czy jest w bazie, jak nie, to wywalić
+        // TODO: MK - dodana metoda na pobieranie przeciwnego koloru - Color getOppositeColor(Color col)
+        // mozna wykorzystać
 
         Color oldFieldColor = gameBoard.get(oldField.getRow()).get(oldField.getColumn()).getColor(),
                 newFieldColor = gameBoard.get(newField.getRow()).get(newField.getColumn()).getColor(),
@@ -376,8 +380,47 @@ public class Board implements BoardInterface {
         }
     }
 
-    public int getNumberOfPawnsInBase(Color baseColor) {
-        // Returns number of pawns in the base
-        return 0;
+    /**
+     * The method checks if the player has all pawns in the opposite base.
+     *
+     * @param player the player whose result we want to check
+     * @return true if all pawns of player are in the opposite base
+     */
+    @Override
+    public boolean checkThePlayerIsAWinner(Player player) {
+        Color colorOfPlayer = player.getColor();
+        Field field;
+        int baseSize = 10;
+        int numberOfPawnsInBase = 0;
+
+        for (int i = 0; i < 19; i++) {
+            for (int j = 0; j < 19; j++) {
+                field = gameBoard.get(i).get(j);
+                if (field != null && field.getColor().equals(getOppositeColor(colorOfPlayer))
+                        && field.isOccupied() && field.getPawn().getColor().equals(colorOfPlayer)) {
+                    numberOfPawnsInBase++;
+                }
+            }
+        }
+
+        return numberOfPawnsInBase == baseSize;
+    }
+
+    private Color getOppositeColor(Color col) {
+        if(col.equals(Color.Red)) {
+            return Color.Yellow;
+        } else if(col.equals(Color.Yellow)) {
+            return Color.Red;
+        } else if(col.equals(Color.Blue)) {
+            return Color.Black;
+        } else if(col.equals(Color.Black)) {
+            return Color.Blue;
+        } else if(col.equals(Color.Green)) {
+            return Color.Orange;
+        } else if(col.equals(Color.Orange)) {
+            return Color.Green;
+        } else {
+            return null;
+        }
     }
 }
