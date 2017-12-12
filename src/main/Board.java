@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class Board implements BoardInterface {
 
@@ -14,6 +15,9 @@ public class Board implements BoardInterface {
     // TODO (notki od PN):
     // Chyba miałoby sens stworzyć klas BluePlayer, RedPlayer, GreenPlayer itd...
     // Jakoś wyglądałoby bardziej "elegancko", przynajmniej tak mi się zdaje.
+
+    // Warto by było tak skonfigurować nasze wyjątki, aby wyświetlały coś o naturze błędu.
+    // Np. na polu, na którym się wykrzacza, o koordynatach (x, y) jest pionek o kolorze x / nie ma pionka / jest null
 
     Board(int numberOfPlayers) throws IllegalArgumentException { //TODO: Own exception?
 
@@ -312,7 +316,7 @@ public class Board implements BoardInterface {
         return possibleWays;
     }
 
-    // checks that the move over other pawns is correct - recursive method
+    // Checks whether the move over other pawns is correct recursively
     private boolean checkMultiMoveIsCorrect(BoardCoordinates oldField, BoardCoordinates newField) {
         if (oldField.getRow() == newField.getRow() && oldField.getColumn() == newField.getColumn()) {
             return true;
@@ -331,6 +335,95 @@ public class Board implements BoardInterface {
         }
 
         return isMoveCorrect;
+    }
+
+    // Bot behavior
+    // Assumption: Bot always moves towards the base of the enemy that's in front of him
+
+    public ArrayList<Pawn> getPawnsClosestToTheEnemyBaseByColor(Color playerColor) {
+
+        ArrayList<BoardCoordinates> playerPawnsCoordinates = getCoordinatesOfAllPawnsOfColor(playerColor);
+        ArrayList<BoardCoordinates> enemyPawnsCoordinates;
+
+
+        // I couldn't find any mathematical scheme due to irregular shape of the board.
+        // Hence, there will be a few if statements...
+
+        if (playerColor == Color.Red) {
+            // Yellow is the enemy we're concerned with, since the bot does not attack others
+
+            enemyPawnsCoordinates = getCoordinatesOfAllPawnsOfColor(Color.Yellow);
+
+            // Find the red pawn that's the closest to the yellow pawn
+
+            int column = 0, row = 0;
+
+            for (BoardCoordinates coordinate: playerPawnsCoordinates) {
+                int coordinateColumn = coordinate.getColumn(), coordinateRow = coordinate.getRow();
+
+                if (coordinateColumn > column || coordinateRow > row) { // TODO: Consult that one!
+                    column = coordinateColumn;
+                    row = coordinateRow;
+                }
+            }
+
+            System.out.println("Max row: " + row + ", column: " + column);
+
+            ArrayList<BoardCoordinates> candidatesToMove = new ArrayList<>();
+            //candidatesToMove.add(new BoardCoordinates(row, column));
+
+            // Find the pawns which are close to the pawn we've just found
+
+            // How to determine which pawns are close to each other (alghorithm)?
+            // Idea: check the "neighbourhood" of the pawn closest to the enemy's base
+            // If no pawns are found in the neighbourhood, increase the "radius" by 1
+            // Finish when there are at least four (or maybe three?) pawns chosen by this method
+
+            int radius = 1;
+
+            // If the first pawn is very far from the base, and there are no more pawns in radius of 2,
+            // there's probably no need to look for another pawns to move?
+
+            // But, on the other way, the game will just keep moving the pawn until it reaches the enemy's base,
+            // so that will be dull.
+
+            // !
+            // Can do this by sorting, but:
+            // TODO: MAKE COORDINATES COMPARABLE! And that's rather difficult.
+
+            for (BoardCoordinates coordinate: playerPawnsCoordinates) {
+                if (checkDistanceIsOneField(coordinate, new BoardCoordinates(row, column))) { // That should work!
+                    candidatesToMove.add(coordinate);
+                    System.out.println("Added pawn with row: " + row + ", column: " + column + ", using one field distance.");
+                }
+//                else if (checkMultiMoveIsCorrect(new BoardCoordinates(row, column), coordinate)) {
+//                    candidatesToMove.add(coordinate);
+//                    System.out.println("Added pawn with row: " + row + ", column: " + column + ", using multi-move distance.");
+//                }
+            }
+
+
+            return null;
+        }
+
+
+
+        return null;
+    }
+
+    public ArrayList<BoardCoordinates> getCoordinatesOfAllPawnsOfColor(Color playerColor) {
+
+        ArrayList<BoardCoordinates> allPawns = getPawnsCoordinates();
+        ArrayList<BoardCoordinates> pawnsOfChosenColor = new ArrayList<>();
+
+        for (BoardCoordinates bc: allPawns) {
+            Pawn pawn = gameBoard.get(bc.getRow()).get(bc.getColumn()).getPawn();
+
+            if (pawn.getColor() == playerColor)
+                pawnsOfChosenColor.add(bc);
+        }
+
+        return pawnsOfChosenColor;
     }
 
     /**

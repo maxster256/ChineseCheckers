@@ -4,9 +4,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-
-
-        Board board = new Board(2);
+        Board board = new Board(4);
         ArrayList<BoardCoordinates> map = board.getPawnsCoordinates();
         try {
             for (BoardCoordinates bc : map) {
@@ -18,12 +16,7 @@ public class Main {
 
         Player player = new Player(Color.Red, "Foo Bar");
 
-        try {
-            board.movePawn(new BoardCoordinates(4, 5), new BoardCoordinates(5, 6), player);
-            board.movePawn(new BoardCoordinates(4, 6), new BoardCoordinates(6, 6), player);
-        } catch(Exception ex) {
-            ex.printStackTrace();
-        }
+        System.out.println("\nAfter moves: \n");
 
         map = board.getPawnsCoordinates();
         try {
