@@ -20,9 +20,24 @@ public class BoardBotTest {
 
 
     @Test
-    public void checkIfClosestPawnsAreFoundCorrectly() throws Exception {
+    public void checkIfClosestPawnsAreFoundCorrectlyForTheRedPlayer() throws Exception {
         board.movePawn(new BoardCoordinates(4, 7), new BoardCoordinates(5, 7), player);
-        assertEquals(board.getPawnsClosestToTheEnemyBaseByColor(Color.Red), null);
+        board.movePawn(new BoardCoordinates(5, 7), new BoardCoordinates(5, 8), player);
+        board.movePawn(new BoardCoordinates(5, 8), new BoardCoordinates(6, 8), player);
+        assertTrue(!board.getCoordinatesOfPawnsClosestToTheEnemyBaseByColor(Color.Red).isEmpty());
+    }
+
+    @Test
+    public void checkIfClosestPawnsAreFoundCorrectlyForTheBlackPlayer() throws Exception {
+
+        Player player = new Player(Color.Black, "Julie");
+
+        board.movePawn(new BoardCoordinates(7, 4), new BoardCoordinates(7, 5), player);
+        //board.movePawn(new BoardCoordinates(7, 5), new BoardCoordinates(7, 6), player);
+        //board.movePawn(new BoardCoordinates(7, 6), new BoardCoordinates(7, 7), player);
+
+        // Note that it won't get a pawn that's very far from the others, but this might not be a problem at all
+        assertTrue(!board.getCoordinatesOfPawnsClosestToTheEnemyBaseByColor(Color.Black).isEmpty());
     }
 
 }

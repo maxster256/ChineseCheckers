@@ -26,12 +26,5 @@ public class Main {
         } catch(WrongFieldStateException ex) {
             ex.printStackTrace();
         }
-//        list.add(null);
-//        list.add(2);
-//
-//        list.add(null);
-//
-//        System.out.print(list);
-
     }
 }

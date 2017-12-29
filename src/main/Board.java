@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Board implements BoardInterface {
 
@@ -343,75 +344,154 @@ public class Board implements BoardInterface {
     // Bot behavior
     // Assumption: Bot always moves towards the base of the enemy that's in front of him
 
-    public ArrayList<Pawn> getPawnsClosestToTheEnemyBaseByColor(Color playerColor) {
+    private void findNearbyPawns(ArrayList<BoardCoordinates> playerPawnsCoordinates, ArrayList<BoardCoordinates> candidatesToMove, int column, int row) {
 
-        ArrayList<BoardCoordinates> playerPawnsCoordinates = getCoordinatesOfAllPawnsOfColor(playerColor);
-        ArrayList<BoardCoordinates> enemyPawnsCoordinates;
+        int radius = 1;
 
+        do {
+            for (BoardCoordinates coordinate : playerPawnsCoordinates) {
+                if (coordinate.getColumn() == column - radius || coordinate.getColumn() == column + radius || coordinate.getColumn() == column) {
+                    if (coordinate.getRow() == row - radius || ( coordinate.getRow() == row && coordinate.getColumn() != column)) {
+                        candidatesToMove.add(coordinate);
+                        System.out.println("Candidate row: " + coordinate.getRow() + ", column: " + coordinate.getColumn() + ", radius: " + radius);
+                    }
+                }
+            }
+            radius++;
 
-        // I couldn't find any mathematical scheme due to irregular shape of the board.
-        // Hence, there will be a few if statements...
+        } while (candidatesToMove.size() < 4);
 
-        if (playerColor == Color.Red) {
-            // Yellow is the enemy we're concerned with, since the bot does not attack others
+    }
 
-            enemyPawnsCoordinates = getCoordinatesOfAllPawnsOfColor(Color.Yellow);
+    public ArrayList<BoardCoordinates> getCoordinatesOfPawnsClosestToTheEnemyBaseByColor(Color playerColor) {
 
-            // Find the red pawn that's the closest to the yellow pawn
+        ArrayList<BoardCoordinates> playerPawnsCoordinates = getCoordinatesOfAllPawnsOfColor(playerColor),
+                candidatesToMove = new ArrayList<>();
+        int column = 0, row = 0;
 
-            int column = 0, row = 0;
+        if (playerColor == Color.Red || playerColor == Color.Black) {
+            // Yellow/blue is the enemy we're concerned with, since the bot does not attack others
+
+            // First, find the red/black pawn that's the closest to the yellow pawn
 
             for (BoardCoordinates coordinate: playerPawnsCoordinates) {
-                int coordinateColumn = coordinate.getColumn(), coordinateRow = coordinate.getRow();
+                int coordinateColumn = coordinate.getColumn(),
+                        coordinateRow = coordinate.getRow();
 
-                if (coordinateColumn > column || coordinateRow > row) { // TODO: Consult that one!
+                if (coordinateRow > row || coordinateColumn > column) {
+                    // It will be random in choosing whether it will be the max from column or max from row,
+                    // depending on what order the pawn will be chosen.
                     column = coordinateColumn;
                     row = coordinateRow;
                 }
             }
 
-            System.out.println("Max row: " + row + ", column: " + column);
+            System.out.println("Max pawn row: " + row + ", column: " + column);
+            candidatesToMove.add(new BoardCoordinates(row, column));
 
-            ArrayList<BoardCoordinates> candidatesToMove = new ArrayList<>();
-            //candidatesToMove.add(new BoardCoordinates(row, column));
+            // Find some pawns nearby to the furthest-placed one
+            findNearbyPawns(playerPawnsCoordinates, candidatesToMove, column, row);
 
-            // Find the pawns which are close to the pawn we've just found
+            // Return the pawns found
+            return candidatesToMove;
+        }
+        else if (playerColor == Color.Yellow || playerColor == Color.Blue) {
+            // Red/black is the enemy we're concerned with.
+            // Start by finding the yellow/blue pawn closest to the red base.
 
-            // How to determine which pawns are close to each other (alghorithm)?
-            // Idea: check the "neighbourhood" of the pawn closest to the enemy's base
-            // If no pawns are found in the neighbourhood, increase the "radius" by 1
-            // Finish when there are at least four (or maybe three?) pawns chosen by this method
+            // Get a first player pawn
+            row = playerPawnsCoordinates.get(0).getRow();
+            column = playerPawnsCoordinates.get(0).getColumn();
 
-            int radius = 1;
-
-            // If the first pawn is very far from the base, and there are no more pawns in radius of 2,
-            // there's probably no need to look for another pawns to move?
-
-            // But, on the other way, the game will just keep moving the pawn until it reaches the enemy's base,
-            // so that will be dull.
-
-            // !
-            // Can do this by sorting, but:
-            // TODO: MAKE COORDINATES COMPARABLE! And that's rather difficult.
+            // If a pawn is found with lesser coordinates, set it as a maximum
 
             for (BoardCoordinates coordinate: playerPawnsCoordinates) {
-                if (checkDistanceIsOneField(coordinate, new BoardCoordinates(row, column))) { // That should work!
-                    candidatesToMove.add(coordinate);
-                    System.out.println("Added pawn with row: " + row + ", column: " + column + ", using one field distance.");
+                int coordinateColumn = coordinate.getColumn(),
+                        coordinateRow = coordinate.getRow();
+
+                if (coordinateRow < row || coordinateColumn < column) {
+                    row = coordinateRow;
+                    column = coordinateColumn;
                 }
-//                else if (checkMultiMoveIsCorrect(new BoardCoordinates(row, column), coordinate)) {
-//                    candidatesToMove.add(coordinate);
-//                    System.out.println("Added pawn with row: " + row + ", column: " + column + ", using multi-move distance.");
-//                }
             }
 
+            System.out.println("Max pawn row: " + row + ", column: " + column);
+            candidatesToMove.add(new BoardCoordinates(row, column));
 
-            return null;
+            // Find some pawns nearby to the furthest-placed one
+            findNearbyPawns(playerPawnsCoordinates, candidatesToMove, column, row);
+
+            // Return the pawns found
+            return candidatesToMove;
         }
+        else if (playerColor == Color.Orange) {
+            // Green is the enemy we're concerned with
+            // Firstly, let's find the orange pawn that's closest to the enemy's base
+
+            row = playerPawnsCoordinates.get(0).getRow();
+            column = playerPawnsCoordinates.get(0).getColumn();
+
+            for (BoardCoordinates coordinate: playerPawnsCoordinates) {
+                int coordinateColumn = coordinate.getColumn(),
+                        coordinateRow = coordinate.getRow();
+
+                if (coordinateColumn > column) {
+                    row = coordinateRow;
+                    column = coordinateColumn;
+                }
+            }
+
+            System.out.println("Max pawn row: " + row + ", column: " + column);
+            candidatesToMove.add(new BoardCoordinates(row, column));
+
+            // Find some pawns nearby to the furthest-placed one
+            findNearbyPawns(playerPawnsCoordinates, candidatesToMove, column, row);
+
+            // Return the pawns found
+            return candidatesToMove;
+        }
+        else if (playerColor == Color.Green) {
+            // Orange is the enemy we're concerned with
+            // Firstly, let's find the green pawn that's closest to the enemy's base
+
+            row = playerPawnsCoordinates.get(0).getRow();
+            column = playerPawnsCoordinates.get(0).getColumn();
+
+            for (BoardCoordinates coordinate: playerPawnsCoordinates) {
+                int coordinateColumn = coordinate.getColumn(),
+                        coordinateRow = coordinate.getRow();
+
+                if (coordinateColumn < column) {
+                    row = coordinateRow;
+                    column = coordinateColumn;
+                }
+            }
+
+            System.out.println("Max pawn row: " + row + ", column: " + column);
+            candidatesToMove.add(new BoardCoordinates(row, column));
+
+            // Find some pawns nearby to the furthest-placed one
+            findNearbyPawns(playerPawnsCoordinates, candidatesToMove, column, row);
+
+            // Return the pawns found
+            return candidatesToMove;
+        }
+        else
+            return null;
+    }
+
+    // Move random pawn by the bot
+
+    public void performBotMoveWithColor(Player player) {
+
+        ArrayList<BoardCoordinates> pawnsToChooseFrom = getCoordinatesOfPawnsClosestToTheEnemyBaseByColor(player.getColor());
+        Random generator = new Random();
+
+        BoardCoordinates chosenPawnCoordinates = pawnsToChooseFrom.get(generator.nextInt(4));
+        System.out.println("Randomly chosen pawn coordinates row: " + chosenPawnCoordinates.getRow() + ", column: " + chosenPawnCoordinates.getColumn());
 
 
 
-        return null;
     }
 
     public ArrayList<BoardCoordinates> getCoordinatesOfAllPawnsOfColor(Color playerColor) {
