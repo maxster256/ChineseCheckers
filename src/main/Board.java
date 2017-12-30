@@ -185,7 +185,7 @@ public class Board implements BoardInterface {
         else if (!oldFieldForPawn.getPawn().getColor().equals(player.getColor())) {
             throw new WrongPawnColorException();
         }
-        else if (checkIfPawnIsInEnemyBase(oldPawnPosition, newPawnPosition)) {
+        else if (checkIfPawnIsInEnemyBase(oldPawnPosition)) {
 
             if (checkIfPawnInEnemyBaseCanMoveToNewField(oldPawnPosition, newPawnPosition)) {
 
@@ -223,17 +223,13 @@ public class Board implements BoardInterface {
                 ((oldField.getColumn() - newField.getColumn()) == -1 && (oldField.getRow() - newField.getRow()) == -1);
     }
 
-    private boolean checkIfPawnIsInEnemyBase(BoardCoordinates oldField, BoardCoordinates newField) {
+    private boolean checkIfPawnIsInEnemyBase(BoardCoordinates oldField) {
 
         Color oldFieldColor = gameBoard.get(oldField.getRow()).get(oldField.getColumn()).getColor(),
-                newFieldColor = gameBoard.get(newField.getRow()).get(newField.getColumn()).getColor(),
                 pawnColor = gameBoard.get(oldField.getRow()).get(oldField.getColumn()).getPawn().getColor();
 
         if (oldFieldColor != null) {
-            // We are in a base
-            // We are in an enemy base
-            // We are at a home base
-            return oldFieldColor != pawnColor;
+            return oldFieldColor == getOppositeColor(pawnColor);
         }
         else {
             // We are not in a base (meaning: we're on a neutral field)
@@ -245,32 +241,10 @@ public class Board implements BoardInterface {
     // If so,
     private boolean checkIfPawnInEnemyBaseCanMoveToNewField(BoardCoordinates oldField, BoardCoordinates newField) {
 
-        // TODO: Implement
-        // Sprawdź kolor pionka, powiązać kolor przeciwny, sprawdzić, czy jest w bazie, jak nie, to wywalić
-        // TODO: MK - dodana metoda na pobieranie przeciwnego koloru - Color getOppositeColor(Color col)
-        // mozna wykorzystać
-
         Color oldFieldColor = gameBoard.get(oldField.getRow()).get(oldField.getColumn()).getColor(),
-                newFieldColor = gameBoard.get(newField.getRow()).get(newField.getColumn()).getColor(),
-                pawnColor = gameBoard.get(oldField.getRow()).get(oldField.getColumn()).getPawn().getColor();
+                newFieldColor = gameBoard.get(newField.getRow()).get(newField.getColumn()).getColor();
 
-        if (oldFieldColor != null) {
-            // If we are in a base
-
-            if (oldFieldColor != pawnColor) {
-                // If we are in an enemy's base (not ours)
-
-                return newFieldColor == oldFieldColor;
-            }
-            else {
-                // We're in our base
-                return false;
-            }
-        }
-        else {
-            // Pawn is not in a base
-            return false;
-        }
+        return newFieldColor == oldFieldColor;
     }
 
     /* The method finds possible ways for the pawn over other pawns,
