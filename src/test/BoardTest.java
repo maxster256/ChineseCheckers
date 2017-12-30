@@ -60,52 +60,53 @@ public class BoardTest {
     public void checkIfPawnDoesNotMoveOutsideOfEnemyBase() throws Exception {
 
         // Creates new Blue player
-        Player bluePlayer = new Player(Color.Blue, "Jackie");
-        int blueRow = 11;
-        int blueColumn = 14;
+        Player yellowPlayer = new Player(Color.Yellow, "Jackie");
+        int yellowRow = 14;
+        int yellowColumn = 13;
 
         // Moves field from (4, 7) near the enemy's base to (10, 13)
         int row = 4;
-        int column = 7;
+        int column = 5;
 
         do {
-            int nextRow = row + 1, nextColumn = column +1;
+            int nextRow = row + 1, nextColumn = column + 1;
 
             board.movePawn(new BoardCoordinates(row, column), new BoardCoordinates(nextRow, nextColumn), player);
             row++;
             column++;
         }
-        while (row != 10 && column != 13);
+        while (row != 12 && column != 13);
+
+        board.movePawn(new BoardCoordinates(12, 13), new BoardCoordinates(13, 13), player);
 
         // Checks if movement has been performed correctly
-        assertEquals(Color.Red, board.getPawnColor(new BoardCoordinates(10, 13)));
+        assertEquals(Color.Red, board.getPawnColor(new BoardCoordinates(13, 13)));
 
-        // Move blue pawn from (11, 14) near the enemy's base
-        board.movePawn(new BoardCoordinates(blueRow, blueColumn), new BoardCoordinates(11, 13), bluePlayer);
-        blueColumn = 13;
 
         do {
-            int nextRow = blueRow -1, nextColumn = blueColumn -1;
+            int nextRow = yellowRow - 1, nextColumn =  yellowColumn - 1;
             //System.out.println("Row: " + blueRow + ", column: " + blueColumn);
-            board.movePawn(new BoardCoordinates(blueRow, blueColumn), new BoardCoordinates(nextRow, nextColumn), bluePlayer);
-            blueRow--;
-            blueColumn--;
+            board.movePawn(new BoardCoordinates(yellowRow, yellowColumn), new BoardCoordinates(nextRow, nextColumn), yellowPlayer);
+            yellowRow--;
+            yellowColumn--;
         }
-        while (blueRow != 5 && blueColumn != 7);
+        while (yellowRow != 6 && yellowColumn != 5);
+
+        board.movePawn(new BoardCoordinates(6, 5), new BoardCoordinates(5, 5), yellowPlayer);
 
         // Checks if movement has been performed correctly
-        assertEquals(Color.Blue, board.getPawnColor(new BoardCoordinates(5, 7)));
+        assertEquals(Color.Yellow, board.getPawnColor(new BoardCoordinates(5, 5)));
 
         // Let's move two pawns inside each other's bases
-        board.movePawn(new BoardCoordinates(blueRow, blueColumn), new BoardCoordinates(4, 7), bluePlayer);
-        board.movePawn(new BoardCoordinates(row, column), new BoardCoordinates(11,14), player);
+        board.movePawn(new BoardCoordinates(5, 5), new BoardCoordinates(4, 5), yellowPlayer);
+        board.movePawn(new BoardCoordinates(13, 13), new BoardCoordinates(14,13), player);
 
-        assertEquals(Color.Blue, board.getPawnColor(new BoardCoordinates(4, 7)));
-        assertEquals(Color.Red, board.getPawnColor(new BoardCoordinates(11, 14)));
+        assertEquals(Color.Yellow, board.getPawnColor(new BoardCoordinates(4, 5)));
+        assertEquals(Color.Red, board.getPawnColor(new BoardCoordinates(14, 13)));
 
         // Finally, let's see if we can move the pawn that's already in enemy's base outside of it
-        board.movePawn(new BoardCoordinates(4, 7), new BoardCoordinates(5, 7), bluePlayer);
-        board.movePawn(new BoardCoordinates(11, 14), new BoardCoordinates(11,13), player);
+        board.movePawn(new BoardCoordinates(4, 5), new BoardCoordinates(5, 5), yellowPlayer);
+        board.movePawn(new BoardCoordinates(14, 13), new BoardCoordinates(13,13), player);
     }
 
     @org.junit.After
