@@ -40,4 +40,12 @@ public class BoardBotTest {
         assertTrue(!board.getCoordinatesOfPawnsClosestToTheEnemyBaseByColor(Color.Black).isEmpty());
     }
 
+    @Test
+    public void checkIfBotOfChosenColorPerformsRandomMove() throws Exception {
+
+        board.performBotMove(player);
+
+        assertTrue(true);
+    }
+
 }

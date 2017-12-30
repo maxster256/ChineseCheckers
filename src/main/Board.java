@@ -1,5 +1,7 @@
-import java.util.ArrayList;
-import java.util.Random;
+import com.sun.javaws.exceptions.InvalidArgumentException;
+
+import java.lang.reflect.Array;
+import java.util.*;
 
 public class Board implements BoardInterface {
 
@@ -76,31 +78,31 @@ public class Board implements BoardInterface {
             newRow = new ArrayList<>();
             for (int j = 0; j < 19; j++) {
                 if (i < 5 && j > 4 && j < i + 5) {
-                    newRow.add(j, new BaseField(Color.Red));
+                    newRow.add(j, new GameField(Color.Red));
                 } else if (i >= 5 && i < 9) {
                     if (j > i - 5 && j < 5) {
-                        newRow.add(j, new BaseField(Color.Black));
+                        newRow.add(j, new GameField(Color.Black));
                     } else if (j >= 5 && j < i + 5) {
-                        newRow.add(j, new NeutralField());
+                        newRow.add(j, new GameField());
                     } else if (j >= i + 5 && j < 14) {
-                        newRow.add(j, new BaseField(Color.Green));
+                        newRow.add(j, new GameField(Color.Green));
                     } else {
                         newRow.add(j, null);
                     }
                 } else if (i == 9 && j > 4 && j < 14) {
-                    newRow.add(j, new NeutralField());
+                    newRow.add(j, new GameField());
                 } else if (i > 9 && i < 14) {
                     if (j > 4 && j < i - 4) {
-                        newRow.add(j, new BaseField(Color.Orange));
+                        newRow.add(j, new GameField(Color.Orange));
                     } else if (j >= i - 4 && j < 14) {
-                        newRow.add(j, new NeutralField());
+                        newRow.add(j, new GameField());
                     } else if (j >= 14 && j < i + 5) {
-                        newRow.add(j, new BaseField(Color.Blue));
+                        newRow.add(j, new GameField(Color.Blue));
                     } else {
                         newRow.add(j, null);
                     }
                 } else if (i >= 14 && j > i - 5 && j < 14) {
-                    newRow.add(j, new BaseField(Color.Yellow));
+                    newRow.add(j, new GameField(Color.Yellow));
                 } else {
                     newRow.add(j, null);
                 }
@@ -339,11 +341,15 @@ public class Board implements BoardInterface {
         return isMoveCorrect;
     }
 
-    // Bot behavior
-    // Assumption: Bot always moves towards the base of the enemy that's in front of him
-
+    /**
+     * Looks for the pawns which are located nearby the pawn that is chosen to be the closest to the enemy's base.
+     * This ensures that the bot behaviour is more random, and thus less predictable for the player.
+     * @param playerPawnsCoordinates
+     * @param candidatesToMove
+     * @param column
+     * @param row
+     */
     private void findNearbyPawns(ArrayList<BoardCoordinates> playerPawnsCoordinates, ArrayList<BoardCoordinates> candidatesToMove, int column, int row) {
-
         int radius = 1;
 
         do {
@@ -358,7 +364,103 @@ public class Board implements BoardInterface {
             radius++;
 
         } while (candidatesToMove.size() < 4);
+    }
 
+    /**
+     * Checks if pawns which are the candidates for our move are not blocked by other pawns, meaning that they would be unable to move.
+     * @param candidatesToMove
+     */
+    private Map<BoardCoordinates, ArrayList<BoardCoordinates>>
+        getCandidatesWhichCanMoveInDesiredDirectionOnly(ArrayList<BoardCoordinates> candidatesToMove, Color playerColor)
+        throws WrongPawnColorException {
+
+        // Bots with these colors will increase their row and/or column on move.
+        // Hence, we'll check if the moves where these values change are correct.
+
+        // Note that we assume here that the bot's pawn will move no more than once using the multi-move trick.
+        // TODO: We don't want to be too ambitious or something here, and most games don't even allow multi-multi move.
+
+        int single_dxdy[][], multi_dxdy[][];
+
+        //ArrayList<BoardCoordinates> desiredCoorinatesToMoveInMultiMoveOnly = new ArrayList<BoardCoordinates>();
+        //ArrayList<BoardCoordinates> desiredCoordinatesToMoveInSingleMoveOnly = new ArrayList<BoardCoordinates>();
+
+        Map<BoardCoordinates, ArrayList<BoardCoordinates>> coordinatesWithPositionsToMoveTo = new HashMap<>();
+
+        if (playerColor == Color.Red || playerColor == Color.Black) {
+            single_dxdy = new int[][] {{0, 1}, {1, 0}, {1, 1}};
+            multi_dxdy = new int[][] {{2, 0}, {0, 2}, {2, 1}, {1, 2}};
+        }
+        else if (playerColor == Color.Yellow || playerColor == Color.Blue) {
+            single_dxdy = new int[][] {{0, -1}, {-1, 0}, {-1, -1}};
+            multi_dxdy = new int[][] {{-2, 0}, {0, -2}, {-2, -1}, {-1, -2}};
+        }
+        else if (playerColor == Color.Orange) {
+            single_dxdy = new int[][] {{0, 1}, {-1, 0}, {-1, 1}};
+            multi_dxdy = new int[][] {{-2, 0}, {0, 2}, {-2, 2}};
+        }
+        else if (playerColor == Color.Green) {
+            single_dxdy = new int[][] {{0, -1}, {1, 0}, {1, -1}};
+            multi_dxdy = new int[][] {{2, 0}, {0, -2}, {2, -2}};
+        }
+        else
+            throw new WrongPawnColorException();
+
+        for (BoardCoordinates candidate: candidatesToMove) {
+
+            ArrayList<BoardCoordinates> everyPossibleWayToMoveInSingleMove = checkPossibleWaysForPawn(candidate);
+            ArrayList<BoardCoordinates> currentPawnWaysForMultiMove = new ArrayList<>();
+            ArrayList<BoardCoordinates> currentPawnWaysForSingleMove = new ArrayList<>();
+
+
+            if (everyPossibleWayToMoveInSingleMove.size() == 0) {
+                // If there are no possibilities for this pawn to move in a single move.
+
+                for (int[] delta: multi_dxdy) {
+                    // Let's check if the multi move can be performed in the direction where it is desired.
+                    int dx = delta[0], dy = delta[1];
+                    BoardCoordinates toCheck = new BoardCoordinates(candidate.getRow() + dx, candidate.getColumn() + dy);
+
+                    if (checkMultiMoveIsCorrect(candidate, toCheck))
+                        currentPawnWaysForMultiMove.add(toCheck);
+                }
+
+                if (currentPawnWaysForMultiMove.size() == 0) {
+                    // If the current pawn cannot be moved either in a single or a multi move, remove it from the candidates to move.
+                    candidatesToMove.remove(candidate);
+                }
+                else {
+                    // Add all of the possibilities for the movement to the multi-moves array.
+                    coordinatesWithPositionsToMoveTo.put(candidate, currentPawnWaysForMultiMove);
+                }
+
+            }
+            else {
+                // If it's possible for the pawn to move in a single move.
+
+                for (int[] delta: single_dxdy) {
+                    // Let's check if the single move can be performed in a desired direction.
+                    int dx = delta[0], dy = delta[1];
+                    BoardCoordinates toCheck = new BoardCoordinates(candidate.getRow() + dx, candidate.getColumn() + dy);
+
+                    if (everyPossibleWayToMoveInSingleMove.contains(toCheck)) {
+                        // If this move is determined to be valid, add the pawn to the array.
+                        currentPawnWaysForSingleMove.add(toCheck);
+                    }
+                }
+
+                if (currentPawnWaysForSingleMove.size() == 0) {
+                    // If the current pawn cannot be moved in a single move, remove it from the candidates to move.
+                    candidatesToMove.remove(candidate);
+                }
+                else {
+                    // Add all of the possibilities for the movement to the multi-moves array.
+                    coordinatesWithPositionsToMoveTo.put(candidate, currentPawnWaysForSingleMove);
+                }
+            }
+        }
+
+        return coordinatesWithPositionsToMoveTo;
     }
 
     public ArrayList<BoardCoordinates> getCoordinatesOfPawnsClosestToTheEnemyBaseByColor(Color playerColor) {
@@ -478,18 +580,42 @@ public class Board implements BoardInterface {
             return null;
     }
 
-    // Move random pawn by the bot
+    /**
+     * Performs the movement of the randomly chosen pawn owned by the player which is handled by the bot.
+     * @param bot
+     */
+    public void performBotMove(Player bot) {
 
-    public void performBotMoveWithColor(Player player) {
+        try {
+            // Color of the bot
+            Color botColor = bot.getColor();
 
-        ArrayList<BoardCoordinates> pawnsToChooseFrom = getCoordinatesOfPawnsClosestToTheEnemyBaseByColor(player.getColor());
-        Random generator = new Random();
+            // Get the list of pawns we'll be chosing from.
+            ArrayList<BoardCoordinates> pawnsToChooseFrom = getCoordinatesOfPawnsClosestToTheEnemyBaseByColor(botColor);
 
-        BoardCoordinates chosenPawnCoordinates = pawnsToChooseFrom.get(generator.nextInt(4));
-        System.out.println("Randomly chosen pawn coordinates row: " + chosenPawnCoordinates.getRow() + ", column: " + chosenPawnCoordinates.getColumn());
+            // Get the hashmap of pawns associated with the best possible directions to move to for a given color.
+            Map<BoardCoordinates, ArrayList<BoardCoordinates>> mapOfPawnsToMove = getCandidatesWhichCanMoveInDesiredDirectionOnly(pawnsToChooseFrom, botColor);
 
+            // Randomly chose the pawn that will be moved from the generated hashmap.
+            Random generator = new Random();
+            List<BoardCoordinates> pawns = new ArrayList<BoardCoordinates>(mapOfPawnsToMove.keySet());
+            BoardCoordinates pawnChosen = pawns.get(generator.nextInt(pawns.size()));
 
+            // Get the coordinates to which it's possible to move the chosen pawn.
+            ArrayList<BoardCoordinates> possibileCoordinatesToMoveChosenPawn = mapOfPawnsToMove.get(pawnChosen);
 
+            // Now, yet again randomly choose where shall we move it!
+            BoardCoordinates newChosenPawnPosition = possibileCoordinatesToMoveChosenPawn.get(generator.nextInt(possibileCoordinatesToMoveChosenPawn.size()));
+
+            // Finally(!) move the pawn there.
+            movePawnToNewField(pawnChosen, newChosenPawnPosition);
+
+            // Jupijajej maderfaker.
+
+        }
+        catch (WrongPawnColorException ex) {
+            System.out.printf("Provided color: " + bot.getColor().toString() + "is wrong.");
+        }
     }
 
     public ArrayList<BoardCoordinates> getCoordinatesOfAllPawnsOfColor(Color playerColor) {
