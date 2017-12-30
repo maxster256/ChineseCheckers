@@ -427,6 +427,8 @@ public class Board implements BoardInterface {
                     int dx = delta[0], dy = delta[1];
                     BoardCoordinates toCheck = new BoardCoordinates(candidate.getRow() + dx, candidate.getColumn() + dy);
 
+                    System.out.println("Checking multi-move to row: " + toCheck.getRow() + ", column: " + toCheck.getColumn());
+
                     if (checkMultiMoveIsCorrect(candidate, toCheck)) {
                         System.out.println("Adding to currentPawnWaysForMultiMove: " + toCheck.toString());
                         currentPawnWaysForMultiMove.add(toCheck);
