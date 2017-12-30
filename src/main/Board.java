@@ -282,7 +282,7 @@ public class Board implements BoardInterface {
         There are two free spaces - top right corner and bottom left corner.
         These two spaces cannot be use, because gameBoard is imagination of real board in different way.
      */
-    private ArrayList<BoardCoordinates> checkPossibleWaysForPawn(BoardCoordinates coordinates) {
+    public ArrayList<BoardCoordinates> checkPossibleWaysForPawn(BoardCoordinates coordinates) {
         ArrayList<BoardCoordinates> possibleWays = new ArrayList<>();
         int X = coordinates.getColumn();
         int Y = coordinates.getRow();
@@ -406,68 +406,53 @@ public class Board implements BoardInterface {
         else
             throw new WrongPawnColorException();
 
-        System.out.println("multi dx array:");
-        for (int [] delta: multi_dxdy) {
-            System.out.println("dx = " + delta[0] + ", dy = " + delta[1]);
-        }
+//        System.out.println("multi dx array:");
+//        for (int [] delta: multi_dxdy) {
+//            System.out.println("dx = " + delta[0] + ", dy = " + delta[1]);
+//        }
+//
+//        int i = 0;
+//
+//        for (BoardCoordinates candidate: candidatesToMove) {
+//            System.out.println(i + ") row: " + candidate.getRow() + ", column: " + candidate.getColumn());
+//            i++;
+//        }
+
 
         for (BoardCoordinates candidate: candidatesToMove) {
 
-            ArrayList<BoardCoordinates> everyPossibleWayToMoveInSingleMove = checkPossibleWaysForPawn(candidate);
             ArrayList<BoardCoordinates> currentPawnWaysForMultiMove = new ArrayList<>();
             ArrayList<BoardCoordinates> currentPawnWaysForSingleMove = new ArrayList<>();
 
-            if (everyPossibleWayToMoveInSingleMove.size() == 0) {
-                // If there are no possibilities for this pawn to move in a single move.
+            for (int[] delta : single_dxdy) {
+                // Let's check if the single move can be performed in a desired direction.
+                int dx = delta[0], dy = delta[1];
+                BoardCoordinates toCheck = new BoardCoordinates(candidate.getRow() + dx, candidate.getColumn() + dy);
 
-                System.out.println("Pawn row: " + candidate.getRow() + ", column: " + candidate.getColumn() + ", single moves: " + everyPossibleWayToMoveInSingleMove.size() + " checking multi-move");
-
-                for (int[] delta: multi_dxdy) {
-                    // Let's check if the multi move can be performed in the direction where it is desired.
-                    int dx = delta[0], dy = delta[1];
-                    BoardCoordinates toCheck = new BoardCoordinates(candidate.getRow() + dx, candidate.getColumn() + dy);
-
-                    System.out.println("Checking multi-move to row: " + toCheck.getRow() + ", column: " + toCheck.getColumn());
-
-                    if (checkMultiMoveIsCorrect(candidate, toCheck)) {
-                        System.out.println("Adding to currentPawnWaysForMultiMove: " + toCheck.toString());
-                        currentPawnWaysForMultiMove.add(toCheck);
-                    }
-                }
-
-                if (currentPawnWaysForMultiMove.size() != 0) {
-                    // Add all of the possibilities for the movement to the multi-moves array.
-                    coordinatesWithPositionsToMoveTo.put(candidate, currentPawnWaysForMultiMove);
-                }
-
-            }
-            else {
-                // If it's possible for the pawn to move in a single move.
-
-                System.out.println("Pawn row: " + candidate.getRow() + ", column: " + candidate.getColumn() + ", single moves: " + everyPossibleWayToMoveInSingleMove.size() + " checking single-move");
-
-                for (int[] delta: single_dxdy) {
-                    // Let's check if the single move can be performed in a desired direction.
-                    int dx = delta[0], dy = delta[1];
-                    BoardCoordinates toCheck = new BoardCoordinates(candidate.getRow() + dx, candidate.getColumn() + dy);
-
-                    if (everyPossibleWayToMoveInSingleMove.contains(toCheck)) {
-                        // If this move is determined to be valid, add the pawn to the array.
-                        System.out.println("Adding to currentPawnWaysForSingleMove: " + toCheck.toString());
-                        currentPawnWaysForSingleMove.add(toCheck);
-                    }
-                }
-
-                if (currentPawnWaysForSingleMove.size() != 0) {
-                    // Add all of the possibilities for the movement to the multi-moves array.
-                    coordinatesWithPositionsToMoveTo.put(candidate, currentPawnWaysForSingleMove);
+                if (gameBoard.get(toCheck.getRow()).get(toCheck.getColumn()) != null && !gameBoard.get(toCheck.getRow()).get(toCheck.getColumn()).isOccupied()) {
+                    // If the field we're checking is not occupied by anything, let's add it to our list.
+                    currentPawnWaysForSingleMove.add(toCheck);
                 }
             }
+
+            // Add all possible single moves to the hashmap.
+            if (currentPawnWaysForSingleMove.size() != 0)
+                coordinatesWithPositionsToMoveTo.put(candidate, currentPawnWaysForSingleMove);
+
+            for (int[] delta : multi_dxdy) {
+                // Let's check if the multi move can be performed in the direction where it is desired.
+                int dx = delta[0], dy = delta[1];
+                BoardCoordinates toCheck = new BoardCoordinates(candidate.getRow() + dx, candidate.getColumn() + dy);
+
+                if (checkMultiMoveIsCorrect(candidate, toCheck)) {
+                    currentPawnWaysForMultiMove.add(toCheck);
+                }
+            }
+
+            // Add all possible multi moves to the hashmap.
+            if (currentPawnWaysForMultiMove.size() != 0)
+                coordinatesWithPositionsToMoveTo.put(candidate, currentPawnWaysForMultiMove);
         }
-
-        System.out.println("Current hashmap:");
-        System.out.println(coordinatesWithPositionsToMoveTo);
-
         return coordinatesWithPositionsToMoveTo;
     }
 
@@ -494,7 +479,6 @@ public class Board implements BoardInterface {
                 }
             }
 
-            //System.out.println("Max pawn row: " + row + ", column: " + column);
             candidatesToMove.add(new BoardCoordinates(row, column));
 
             // Find some pawns nearby to the furthest-placed one
@@ -605,22 +589,28 @@ public class Board implements BoardInterface {
             // Get the hashmap of pawns associated with the best possible directions to move to for a given color.
             Map<BoardCoordinates, ArrayList<BoardCoordinates>> mapOfPawnsToMove = getCandidatesWhichCanMoveInDesiredDirectionOnly(pawnsToChooseFrom, botColor);
 
+            System.out.println("Current hashmap:");
+            System.out.println(mapOfPawnsToMove);
+
             // Randomly chose the pawn that will be moved from the generated hashmap.
             Random generator = new Random();
             List<BoardCoordinates> pawns = new ArrayList<BoardCoordinates>(mapOfPawnsToMove.keySet());
+            BoardCoordinates pawnChosen = pawns.get(generator.nextInt(pawns.size()));
 
-            //System.out.println(mapOfPawnsToMove);
-
-            BoardCoordinates pawnChosen = pawns.get(generator.nextInt(pawns.size() - 1));
+            System.out.println("Chosen pawn row: " + pawnChosen.getRow() + ", column: " + pawnChosen.getColumn());
 
             // Get the coordinates to which it's possible to move the chosen pawn.
             ArrayList<BoardCoordinates> possibileCoordinatesToMoveChosenPawn = mapOfPawnsToMove.get(pawnChosen);
 
+            System.out.println("Coordinates possible to move:\n" + possibileCoordinatesToMoveChosenPawn);
+
             // Now, yet again randomly choose where shall we move it!
-            BoardCoordinates newChosenPawnPosition = possibileCoordinatesToMoveChosenPawn.get(generator.nextInt(possibileCoordinatesToMoveChosenPawn.size() - 1));
+            BoardCoordinates newChosenPawnPosition = possibileCoordinatesToMoveChosenPawn.get(generator.nextInt(possibileCoordinatesToMoveChosenPawn.size()));
 
             // Finally(!) move the pawn there.
             movePawnToNewField(pawnChosen, newChosenPawnPosition);
+
+            System.out.println("New pawn position row: " + newChosenPawnPosition.getRow() + ", column: " + newChosenPawnPosition.getColumn());
 
             // Jupijajej maderfaker.
 
