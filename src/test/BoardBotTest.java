@@ -20,7 +20,7 @@ public class BoardBotTest {
 
 
     @Test
-    public void checkIfClosestPawnsAreFoundCorrectlyForTheRedPlayer() throws Exception {
+    public void checkIfClosestPawnIsFoundCorrectlyForTheRedPlayer() throws Exception {
         board.movePawn(new BoardCoordinates(4, 7), new BoardCoordinates(5, 7), player);
         board.movePawn(new BoardCoordinates(5, 7), new BoardCoordinates(5, 8), player);
         board.movePawn(new BoardCoordinates(5, 8), new BoardCoordinates(6, 8), player);
@@ -28,8 +28,7 @@ public class BoardBotTest {
     }
 
     @Test
-    public void checkIfClosestPawnsAreFoundCorrectlyForTheBlackPlayer() throws Exception {
-
+    public void checkIfClosestPawnIsFoundCorrectlyForTheBlackPlayer() throws Exception {
         Player player = new Player(Color.Black, "Julie");
 
         board.movePawn(new BoardCoordinates(7, 4), new BoardCoordinates(7, 5), player);
@@ -41,10 +40,9 @@ public class BoardBotTest {
     }
 
     @Test
-    public void checkIfBotOfChosenColorPerformsRandomMove() throws Exception {
+    public void checkIfBotMoveIsPerformedCorrectly() throws Exception {
 
         board.performBotMove(player);
-
         assertTrue(true);
     }
 
