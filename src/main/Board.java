@@ -7,7 +7,21 @@ public class Board implements BoardInterface {
     private ArrayList<ArrayList<Field>> gameBoard;
     private ArrayList<Color> usedColorByPlayers; // colors of pawns
 
-    Board(int numberOfPlayers) throws IllegalArgumentException {
+    // TODO (for this week):
+    // 1. Sprawdź, czy pionek nie jest w bazie przeciwnika, jeśli jest, nie pozwól mu z niej wyjść. - DONE.
+    //      źle!!! nie sprawdzasz przeciwnego koloru, a po prostu czy jest inny od pionka!!!
+    // 2. Określ, kto wygrywa (obserwator?) - jako tako zrobione, bez obserwatora
+    // 3. Stwórz bota.
+
+    // TODO (notki od PN):
+    // Chyba miałoby sens stworzyć klas BluePlayer, RedPlayer, GreenPlayer itd...
+    // Jakoś wyglądałoby bardziej "elegancko", przynajmniej tak mi się zdaje.
+
+    // MK
+    // Chyba nie ma sensu, skoro jedyna różnica to kolor... trochę mało jak na osobną klasę
+    //TODO: Poprawić punkt 1 z TODO wyżej (for this week)!!!
+
+    Board(int numberOfPlayers) throws IllegalArgumentException { //TODO: Own exception?
 
         if (numberOfPlayers != 2 && numberOfPlayers != 3 &&
                 numberOfPlayers != 4 && numberOfPlayers != 6) {
@@ -23,7 +37,6 @@ public class Board implements BoardInterface {
 
     /*
     The gameBoard (rectangular 2D array of size 19x19) is like:
-
     ["null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null"],
     ["null", "null", "null", "null", "null", "RED_", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null"],
     ["null", "null", "null", "null", "null", "RED_", "RED_", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null"],
@@ -43,8 +56,7 @@ public class Board implements BoardInterface {
     ["null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "YELL", "YELL", "null", "null", "null", "null", "null"],
     ["null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "YELL", "null", "null", "null", "null", "null"],
     ["null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null"],
-
-    RED_, BLAC, GREE, ORAN, YELL and BLUE are colors of BaseFields and EMPT is Neutral.
+    RED_, BLAC, GREE, ORAN, YELL and BLUE are colors of BaseFields and EMPT is NeutralField.
     Null means that there is no Field.
      */
 
@@ -64,31 +76,31 @@ public class Board implements BoardInterface {
             newRow = new ArrayList<>();
             for (int j = 0; j < 19; j++) {
                 if (i < 5 && j > 4 && j < i + 5) {
-                    newRow.add(j, new GameField(Color.Red));
+                    newRow.add(j, new BaseField(Color.Red));
                 } else if (i >= 5 && i < 9) {
                     if (j > i - 5 && j < 5) {
-                        newRow.add(j, new GameField(Color.Black));
+                        newRow.add(j, new BaseField(Color.Black));
                     } else if (j >= 5 && j < i + 5) {
-                        newRow.add(j, new GameField());
+                        newRow.add(j, new NeutralField());
                     } else if (j >= i + 5 && j < 14) {
-                        newRow.add(j, new GameField(Color.Green));
+                        newRow.add(j, new BaseField(Color.Green));
                     } else {
                         newRow.add(j, null);
                     }
                 } else if (i == 9 && j > 4 && j < 14) {
-                    newRow.add(j, new GameField());
+                    newRow.add(j, new NeutralField());
                 } else if (i > 9 && i < 14) {
                     if (j > 4 && j < i - 4) {
-                        newRow.add(j, new GameField(Color.Orange));
+                        newRow.add(j, new BaseField(Color.Orange));
                     } else if (j >= i - 4 && j < 14) {
-                        newRow.add(j, new GameField());
+                        newRow.add(j, new NeutralField());
                     } else if (j >= 14 && j < i + 5) {
-                        newRow.add(j, new GameField(Color.Blue));
+                        newRow.add(j, new BaseField(Color.Blue));
                     } else {
                         newRow.add(j, null);
                     }
                 } else if (i >= 14 && j > i - 5 && j < 14) {
-                    newRow.add(j, new GameField(Color.Yellow));
+                    newRow.add(j, new BaseField(Color.Yellow));
                 } else {
                     newRow.add(j, null);
                 }
@@ -171,7 +183,7 @@ public class Board implements BoardInterface {
         else if (!oldFieldForPawn.getPawn().getColor().equals(player.getColor())) {
             throw new WrongPawnColorException();
         }
-        else if (checkIfPawnIsInEnemyBase(oldPawnPosition)) {
+        else if (checkIfPawnIsInEnemyBase(oldPawnPosition, newPawnPosition)) {
 
             if (checkIfPawnInEnemyBaseCanMoveToNewField(oldPawnPosition, newPawnPosition)) {
 
@@ -209,13 +221,17 @@ public class Board implements BoardInterface {
                 ((oldField.getColumn() - newField.getColumn()) == -1 && (oldField.getRow() - newField.getRow()) == -1);
     }
 
-    private boolean checkIfPawnIsInEnemyBase(BoardCoordinates oldField) {
+    private boolean checkIfPawnIsInEnemyBase(BoardCoordinates oldField, BoardCoordinates newField) {
 
         Color oldFieldColor = gameBoard.get(oldField.getRow()).get(oldField.getColumn()).getColor(),
+                newFieldColor = gameBoard.get(newField.getRow()).get(newField.getColumn()).getColor(),
                 pawnColor = gameBoard.get(oldField.getRow()).get(oldField.getColumn()).getPawn().getColor();
 
         if (oldFieldColor != null) {
-            return oldFieldColor == getOppositeColor(pawnColor);
+            // We are in a base
+            // We are in an enemy base
+            // We are at a home base
+            return oldFieldColor != pawnColor;
         }
         else {
             // We are not in a base (meaning: we're on a neutral field)
@@ -227,10 +243,32 @@ public class Board implements BoardInterface {
     // If so,
     private boolean checkIfPawnInEnemyBaseCanMoveToNewField(BoardCoordinates oldField, BoardCoordinates newField) {
 
-        Color oldFieldColor = gameBoard.get(oldField.getRow()).get(oldField.getColumn()).getColor(),
-                newFieldColor = gameBoard.get(newField.getRow()).get(newField.getColumn()).getColor();
+        // TODO: Implement
+        // Sprawdź kolor pionka, powiązać kolor przeciwny, sprawdzić, czy jest w bazie, jak nie, to wywalić
+        // TODO: MK - dodana metoda na pobieranie przeciwnego koloru - Color getOppositeColor(Color col)
+        // mozna wykorzystać
 
-        return newFieldColor == oldFieldColor;
+        Color oldFieldColor = gameBoard.get(oldField.getRow()).get(oldField.getColumn()).getColor(),
+                newFieldColor = gameBoard.get(newField.getRow()).get(newField.getColumn()).getColor(),
+                pawnColor = gameBoard.get(oldField.getRow()).get(oldField.getColumn()).getPawn().getColor();
+
+        if (oldFieldColor != null) {
+            // If we are in a base
+
+            if (oldFieldColor != pawnColor) {
+                // If we are in an enemy's base (not ours)
+
+                return newFieldColor == oldFieldColor;
+            }
+            else {
+                // We're in our base
+                return false;
+            }
+        }
+        else {
+            // Pawn is not in a base
+            return false;
+        }
     }
 
     /* The method finds possible ways for the pawn over other pawns,
