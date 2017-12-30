@@ -6,21 +6,7 @@ public class Board implements BoardInterface {
     private ArrayList<ArrayList<Field>> gameBoard;
     private ArrayList<Color> usedColorByPlayers; // colors of pawns
 
-    // TODO (for this week):
-    // 1. Sprawdź, czy pionek nie jest w bazie przeciwnika, jeśli jest, nie pozwól mu z niej wyjść. - DONE.
-    //      źle!!! nie sprawdzasz przeciwnego koloru, a po prostu czy jest inny od pionka!!!
-    // 2. Określ, kto wygrywa (obserwator?) - jako tako zrobione, bez obserwatora
-    // 3. Stwórz bota.
-
-    // TODO (notki od PN):
-    // Chyba miałoby sens stworzyć klas BluePlayer, RedPlayer, GreenPlayer itd...
-    // Jakoś wyglądałoby bardziej "elegancko", przynajmniej tak mi się zdaje.
-
-    // MK
-    // Chyba nie ma sensu, skoro jedyna różnica to kolor... trochę mało jak na osobną klasę
-    //TODO: Poprawić punkt 1 z TODO wyżej (for this week)!!!
-
-    Board(int numberOfPlayers) throws IllegalArgumentException { //TODO: Own exception?
+    Board(int numberOfPlayers) throws IllegalArgumentException {
 
         if (numberOfPlayers != 2 && numberOfPlayers != 3 &&
                 numberOfPlayers != 4 && numberOfPlayers != 6) {
@@ -57,7 +43,7 @@ public class Board implements BoardInterface {
     ["null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "YELL", "null", "null", "null", "null", "null"],
     ["null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null"],
 
-    RED_, BLAC, GREE, ORAN, YELL and BLUE are colors of BaseFields and EMPT is NeutralField.
+    RED_, BLAC, GREE, ORAN, YELL and BLUE are colors of BaseFields and EMPT is Neutral.
     Null means that there is no Field.
      */
 
@@ -77,31 +63,31 @@ public class Board implements BoardInterface {
             newRow = new ArrayList<>();
             for (int j = 0; j < 19; j++) {
                 if (i < 5 && j > 4 && j < i + 5) {
-                    newRow.add(j, new BaseField(Color.Red));
+                    newRow.add(j, new GameField(Color.Red));
                 } else if (i >= 5 && i < 9) {
                     if (j > i - 5 && j < 5) {
-                        newRow.add(j, new BaseField(Color.Black));
+                        newRow.add(j, new GameField(Color.Black));
                     } else if (j >= 5 && j < i + 5) {
-                        newRow.add(j, new NeutralField());
+                        newRow.add(j, new GameField());
                     } else if (j >= i + 5 && j < 14) {
-                        newRow.add(j, new BaseField(Color.Green));
+                        newRow.add(j, new GameField(Color.Green));
                     } else {
                         newRow.add(j, null);
                     }
                 } else if (i == 9 && j > 4 && j < 14) {
-                    newRow.add(j, new NeutralField());
+                    newRow.add(j, new GameField());
                 } else if (i > 9 && i < 14) {
                     if (j > 4 && j < i - 4) {
-                        newRow.add(j, new BaseField(Color.Orange));
+                        newRow.add(j, new GameField(Color.Orange));
                     } else if (j >= i - 4 && j < 14) {
-                        newRow.add(j, new NeutralField());
+                        newRow.add(j, new GameField());
                     } else if (j >= 14 && j < i + 5) {
-                        newRow.add(j, new BaseField(Color.Blue));
+                        newRow.add(j, new GameField(Color.Blue));
                     } else {
                         newRow.add(j, null);
                     }
                 } else if (i >= 14 && j > i - 5 && j < 14) {
-                    newRow.add(j, new BaseField(Color.Yellow));
+                    newRow.add(j, new GameField(Color.Yellow));
                 } else {
                     newRow.add(j, null);
                 }
